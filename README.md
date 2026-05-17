@@ -199,29 +199,3 @@ curl -X POST http://localhost:8000/evaluate \
     "contexts": ["Status updates must be posted every 30 minutes during active mitigation."]
   }'
 ```
-
-## Screenshots (placeholders)
-
-After running the app, capture and add:
-
-- `docs/screenshots/dashboard.png`
-- `docs/screenshots/chat_with_sources.png`
-- `docs/screenshots/evaluation_metrics.png`
-
-Then embed in README:
-
-```md
-![Dashboard](docs/screenshots/dashboard.png)
-![Chat with Sources](docs/screenshots/chat_with_sources.png)
-![RAGAS Metrics](docs/screenshots/evaluation_metrics.png)
-```
-
-## GitHub portfolio wording
-
-Use this in your repository description:
-
-- Vectorless RAG internal knowledge assistant using BM25 retrieval, LangGraph orchestration, and RAGAS evaluation.
-
-## Resume bullet suggestion
-
-- Built a configurable RAG system with LangChain and LangGraph for internal document Q&A, implemented vectorless BM25 retrieval without a vector DB, and evaluated faithfulness, answer relevancy, hallucination risk, and retrieval quality using RAGAS.
