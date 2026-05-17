@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-ui: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", "Menlo", monospace;
+  --bg-0: #f8fbff;
+  --bg-1: #eef6ff;
+  --ink: #0f172a;
+  --ink-soft: #334155;
+  --border: #dbe5f2;
+  --brand: #0f766e;
+  --accent: #0ea5e9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-ui), sans-serif;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(14, 165, 233, 0.14), transparent 35%),
+    radial-gradient(circle at 90% 0%, rgba(15, 118, 110, 0.1), transparent 38%),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1));
+  min-height: 100vh;
+}
+
+code,
+pre {
+  font-family: var(--font-mono), monospace;
+}
+
+.panel {
+  @apply rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-panel backdrop-blur;
+}
+
+.metric-card {
+  @apply rounded-xl border border-slate-200 bg-slate-50 p-4;
+}

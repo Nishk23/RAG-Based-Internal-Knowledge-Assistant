@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-internal-knowledge-assistant-backend"
+version = "1.0.0"
+description = "FastAPI backend for vectorless RAG internal knowledge assistant"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "pydantic",
+  "python-dotenv",
+  "langchain",
+  "langchain-openai",
+  "langgraph",
+  "ragas",
+  "datasets",
+  "pandas",
+  "numpy",
+  "scikit-learn",
+  "rank-bm25",
+  "pypdf",
+  "python-multipart",
+  "pytest",
+  "httpx",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
