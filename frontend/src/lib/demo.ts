@@ -102,8 +102,9 @@ export function demoSampleLoad(): SampleLoadResponse {
 
 export function demoChat(payload: ChatRequest): ChatResponse {
   const normalizedQuestion = payload.question.toLowerCase();
+  const questionTerms = new Set(normalizedQuestion.split(/[^a-z0-9]+/).filter(Boolean));
   const match = sampleAnswers.find((sample) =>
-    sample.terms.some((term) => normalizedQuestion.includes(term))
+    sample.terms.some((term) => questionTerms.has(term))
   );
 
   if (!match) {
