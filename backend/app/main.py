@@ -29,7 +29,7 @@ from app.security.auth import Principal, require_roles
 from app.security.rate_limit import limiter
 from app.utils.logging import configure_logging, get_logger, request_id_context
 
-APP_VERSION = "2.0.0"
+APP_VERSION = "1.0.0"
 REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
 
 configure_logging()

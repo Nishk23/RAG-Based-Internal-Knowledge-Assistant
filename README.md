@@ -1,10 +1,21 @@
 # Enterprise Internal Knowledge Assistant
 
 [![CI](https://github.com/Nishk23/RAG-Based-Internal-Knowledge-Assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/Nishk23/RAG-Based-Internal-Knowledge-Assistant/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Nishk23/RAG-Based-Internal-Knowledge-Assistant/actions/workflows/codeql.yml/badge.svg)](https://github.com/Nishk23/RAG-Based-Internal-Knowledge-Assistant/actions/workflows/codeql.yml)
+[![Pages Demo](https://github.com/Nishk23/RAG-Based-Internal-Knowledge-Assistant/actions/workflows/pages.yml/badge.svg)](https://nishk23.github.io/RAG-Based-Internal-Knowledge-Assistant/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A security-first, tenant-isolated retrieval-augmented generation reference implementation for internal knowledge. It combines a Next.js 16 OIDC/PKCE client with a FastAPI API, transactional SQL persistence, access-controlled sparse retrieval, citation validation, deterministic evaluation, audit trails, rate limiting, and production observability.
 
 This repository implements an enterprise **application baseline**. A production approval still requires organization-specific identity configuration, network controls, secrets management, data classification, backup/restore testing, load testing, model-provider review, and a completed threat-model review.
+
+## Live showcase
+
+[Open the public sample demo](https://nishk23.github.io/RAG-Based-Internal-Knowledge-Assistant/) to explore the interface with synthetic policy documents, deterministic cited answers, confidence-gated abstention, and quality indicators. The static showcase runs entirely in the browser: it has no backend, credentials, real organizational data, model calls, or persistence. See [public demo scope](docs/public-demo.md).
+
+| Dashboard and indexed sample documents | Evidence-grounded answer and evaluation |
+|---|---|
+| ![Knowledge assistant dashboard with synthetic documents](docs/assets/dashboard.jpg) | ![Cited answer and deterministic quality metrics](docs/assets/cited-answer.jpg) |
 
 ## Enterprise capabilities
 
@@ -142,6 +153,20 @@ Retrieval remains embedding-free for transparent and low-egress operation:
 
 The online `/evaluate` endpoint returns deterministic indicators without sending evaluation data to a second model. CI additionally runs the golden retrieval dataset and rejects regressions below Recall@3 `0.95` or MRR `0.85`. See [Evaluation](docs/evaluation.md).
 
+### Validated quality baseline
+
+| Verification signal | Result | Enforcement |
+|---|---:|---|
+| Backend tests | 39 passed | CI required check |
+| Branch coverage | 83.88% | Fails below 80% |
+| Golden retrieval Recall@3 | 1.00 | Fails below 0.95 |
+| Golden retrieval MRR | 1.00 | Fails below 0.85 |
+| High/critical npm vulnerabilities | 0 | `npm audit` CI gate |
+| Python dependency vulnerabilities | 0 | `pip-audit` CI gate |
+| CodeQL findings | 0 | Required JavaScript/TypeScript and Python checks |
+
+Results reflect the checked-in golden dataset and automated pipeline, not a claim about quality on an organization’s private corpus. Re-run the evaluation and security gates after changing data, retrieval configuration, models, or dependencies.
+
 ## Verification
 
 ```bash
@@ -176,8 +201,13 @@ The current checked-in baseline passes 39 backend tests, an 80% coverage gate, s
 - [Operations runbook](docs/operations-runbook.md)
 - [Data governance](docs/data-governance.md)
 - [Evaluation and quality gates](docs/evaluation.md)
+- [Public sample demo scope](docs/public-demo.md)
 - [Vectorless retrieval design](docs/vectorless_rag.md)
 - [Security vulnerability reporting](SECURITY.md)
+
+## License
+
+Released under the [MIT License](LICENSE).
 
 ## Known boundaries
 
