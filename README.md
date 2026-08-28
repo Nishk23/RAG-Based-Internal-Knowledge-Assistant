@@ -6,7 +6,7 @@ A security-first, tenant-isolated retrieval-augmented generation reference imple
 
 This repository implements an enterprise **application baseline**. A production approval still requires organization-specific identity configuration, network controls, secrets management, data classification, backup/restore testing, load testing, model-provider review, and a completed threat-model review.
 
-## What changed in version 2
+## Enterprise capabilities
 
 - OIDC JWT validation with issuer, audience, expiry, signature, tenant, and role checks.
 - Role-based permissions (`reader`, `editor`, `admin`) and tenant filtering before retrieval.
