@@ -79,3 +79,10 @@ def test_audit_events_are_tenant_scoped(tmp_path) -> None:
     )
     assert len(store.get_audit_events("tenant-a")) == 1
     assert store.get_audit_events("tenant-b") == []
+
+
+def test_store_creates_sqlite_parent_directory(tmp_path) -> None:
+    database_path = tmp_path / "nested" / "knowledge.db"
+    store = DocumentStore(f"sqlite:///{database_path}")
+    store.initialize()
+    assert database_path.exists()

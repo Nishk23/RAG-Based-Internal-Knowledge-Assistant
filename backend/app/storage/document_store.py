@@ -7,7 +7,7 @@ from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import create_engine, delete, select, text
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -45,6 +45,10 @@ class DocumentStore:
             database_url.mkdir(parents=True, exist_ok=True)
             database_url = f"sqlite:///{database_url / 'knowledge.db'}"
         self.database_url = str(database_url or settings.database_url)
+        if self.database_url.startswith("sqlite"):
+            sqlite_database = make_url(self.database_url).database
+            if sqlite_database and sqlite_database != ":memory:":
+                Path(sqlite_database).parent.mkdir(parents=True, exist_ok=True)
         connect_args = (
             {"check_same_thread": False, "timeout": 30}
             if self.database_url.startswith("sqlite")

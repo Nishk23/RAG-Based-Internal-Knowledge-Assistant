@@ -164,7 +164,7 @@ npm run build
 npm audit --audit-level=high
 ```
 
-The current checked-in baseline passes 38 backend tests, an 80% coverage gate, strict typing/linting, frontend lint/type/build, migration validation, dependency audits, and the golden retrieval gate.
+The current checked-in baseline passes 39 backend tests, an 80% coverage gate, strict typing/linting, frontend lint/type/build, migration validation, dependency audits, and the golden retrieval gate.
 
 ## Documentation
 
