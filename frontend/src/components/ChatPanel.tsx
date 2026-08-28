@@ -5,12 +5,14 @@ import { useState } from "react";
 import { askQuestion } from "@/lib/api";
 import { ChatResponse, EvaluationResult, SourceChunk } from "@/lib/types";
 import { SourceCard } from "@/components/SourceCard";
+import { useEnterpriseAuth } from "@/components/Providers";
 
 interface ChatPanelProps {
   onEvaluationChange: (evaluation: EvaluationResult | null) => void;
 }
 
 export function ChatPanel({ onEvaluationChange }: ChatPanelProps) {
+  const auth = useEnterpriseAuth();
   const [question, setQuestion] = useState("");
   const [topK, setTopK] = useState(5);
   const [evaluate, setEvaluate] = useState(false);
@@ -29,11 +31,10 @@ export function ChatPanel({ onEvaluationChange }: ChatPanelProps) {
     setError("");
 
     try {
-      const response: ChatResponse = await askQuestion({
-        question,
-        top_k: topK,
-        evaluate
-      });
+      const response: ChatResponse = await askQuestion(
+        { question, top_k: topK, evaluate },
+        auth.accessToken
+      );
 
       setAnswer(response.answer);
       setSources(response.sources);
@@ -74,7 +75,7 @@ export function ChatPanel({ onEvaluationChange }: ChatPanelProps) {
 
           <label className="flex items-center gap-2 pt-6 text-sm text-slate-700">
             <input checked={evaluate} onChange={(event) => setEvaluate(event.target.checked)} type="checkbox" />
-            Run RAGAS evaluation
+            Run quality evaluation
           </label>
 
           <button

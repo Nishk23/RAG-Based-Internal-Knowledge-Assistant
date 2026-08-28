@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 
+import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Internal Knowledge Assistant",
-  description: "Vectorless RAG with LangChain, LangGraph, and RAGAS"
+  title: "Enterprise Internal Knowledge Assistant",
+  description: "Access-controlled and source-grounded internal knowledge retrieval"
 };
 
 export default function RootLayout({
@@ -14,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><Providers>{children}</Providers></body>
     </html>
   );
 }

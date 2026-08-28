@@ -1,0 +1,8 @@
+[
+  {"question": "How quickly must a Severity 1 incident response begin?", "expected_document": "sla_operations.md"},
+  {"question": "When are postmortems due after an incident closes?", "expected_document": "sla_operations.md"},
+  {"question": "Who must approve a policy exception?", "expected_document": "company_policy.md"},
+  {"question": "When must new employees finish security training?", "expected_document": "company_policy.md"},
+  {"question": "Which AI use cases need a model card and legal review?", "expected_document": "ai_governance.md"},
+  {"question": "What needs to be versioned for production AI?", "expected_document": "ai_governance.md"}
+]

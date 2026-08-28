@@ -12,6 +12,10 @@ import {
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
 
+function authorizationHeaders(accessToken?: string): HeadersInit {
+  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+}
+
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const fallback = `Request failed with status ${response.status}`;
@@ -28,34 +32,39 @@ async function parseJson<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function uploadDocument(file: File): Promise<UploadResponse> {
+export async function uploadDocument(file: File, accessToken?: string): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
   const response = await fetch(`${BACKEND_URL}/documents/upload`, {
     method: "POST",
+    headers: authorizationHeaders(accessToken),
     body: formData
   });
   return parseJson<UploadResponse>(response);
 }
 
-export async function listDocuments(): Promise<DocumentSummary[]> {
-  const response = await fetch(`${BACKEND_URL}/documents`);
+export async function listDocuments(accessToken?: string): Promise<DocumentSummary[]> {
+  const response = await fetch(`${BACKEND_URL}/documents`, {
+    headers: authorizationHeaders(accessToken)
+  });
   const body = await parseJson<{ documents: DocumentSummary[] }>(response);
   return body.documents;
 }
 
-export async function loadSampleDocuments(): Promise<SampleLoadResponse> {
+export async function loadSampleDocuments(accessToken?: string): Promise<SampleLoadResponse> {
   const response = await fetch(`${BACKEND_URL}/documents/load-sample`, {
-    method: "POST"
+    method: "POST",
+    headers: authorizationHeaders(accessToken)
   });
   return parseJson<SampleLoadResponse>(response);
 }
 
-export async function askQuestion(payload: ChatRequest): Promise<ChatResponse> {
+export async function askQuestion(payload: ChatRequest, accessToken?: string): Promise<ChatResponse> {
   const response = await fetch(`${BACKEND_URL}/chat`, {
     method: "POST",
     headers: {
+      ...authorizationHeaders(accessToken),
       "Content-Type": "application/json"
     },
     body: JSON.stringify(payload)
@@ -63,10 +72,14 @@ export async function askQuestion(payload: ChatRequest): Promise<ChatResponse> {
   return parseJson<ChatResponse>(response);
 }
 
-export async function runEvaluation(payload: EvaluationRequest): Promise<EvaluationResult> {
+export async function runEvaluation(
+  payload: EvaluationRequest,
+  accessToken?: string
+): Promise<EvaluationResult> {
   const response = await fetch(`${BACKEND_URL}/evaluate`, {
     method: "POST",
     headers: {
+      ...authorizationHeaders(accessToken),
       "Content-Type": "application/json"
     },
     body: JSON.stringify(payload)

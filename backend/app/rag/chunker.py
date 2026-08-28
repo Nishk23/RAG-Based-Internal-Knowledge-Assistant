@@ -32,9 +32,11 @@ def chunk_text(text: str, chunk_size_words: int, chunk_overlap_words: int) -> li
 def build_chunk_records(
     *,
     document_id: str,
+    tenant_id: str,
     document_name: str,
     chunks: list[str],
-    created_at: str,
+    created_at: Any,
+    allowed_roles: list[str],
     base_metadata: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     metadata = base_metadata or {}
@@ -44,9 +46,11 @@ def build_chunk_records(
             {
                 "chunk_id": f"{document_id}_chunk_{idx}",
                 "document_id": document_id,
+                "tenant_id": tenant_id,
                 "document_name": document_name,
                 "text": chunk,
                 "chunk_index": idx,
+                "allowed_roles": allowed_roles,
                 "metadata": metadata,
                 "created_at": created_at,
             }

@@ -1,92 +1,110 @@
-# Architecture
+# Architecture and data flow
 
-## Overview
+## Scope
 
-The system is split into a Next.js frontend and a FastAPI backend.
+The application is a tenant-isolated internal knowledge assistant. It accepts approved text,
+Markdown, and PDF files, retrieves only chunks authorized for the caller, asks an LLM to answer
+from that evidence, validates citations, and records security-relevant audit events.
 
-- Frontend handles document upload, query input, source display, and optional evaluation views.
-- Backend handles ingestion, chunking, retrieval, orchestration, answer generation, and evaluation.
+The repository is an enterprise application baseline, not a complete enterprise platform. The
+identity provider, ingress/WAF, TLS termination, secret manager, managed data services, immutable
+audit sink, backups, and disaster recovery are deployment responsibilities.
 
-## Frontend layer
+## Components
 
-- `src/components/DocumentUpload.tsx`: upload files and trigger sample document loading.
-- `src/components/ChatPanel.tsx`: submits questions and displays answers/sources.
-- `src/components/EvaluationPanel.tsx`: renders RAGAS metrics when available.
-- `src/lib/api.ts`: typed API client layer.
+```mermaid
+flowchart TB
+    Browser[Browser] -->|OIDC Authorization Code + PKCE| IdP[Enterprise IdP]
+    Browser -->|access token| UI[Next.js frontend]
+    UI -->|Bearer token + request ID| API[FastAPI API]
+    API --> Auth[JWT validation and RBAC]
+    Auth --> Store[SQLAlchemy document store]
+    Store --> DB[(PostgreSQL)]
+    API --> Limit[Rate limiter]
+    Limit --> Redis[(Redis)]
+    API --> Retrieve[Authorized sparse retrieval]
+    Retrieve --> LLM[Configured LLM provider]
+    API --> Telemetry[JSON logs, Prometheus, OTLP]
+    API --> Scanner[Optional ClamAV]
+```
 
-## Backend layer
+- **Next.js frontend:** initiates OIDC login, keeps the OIDC session, calls the API, and renders
+  answers, sources, document management, and deterministic evaluation results.
+- **FastAPI API:** the security boundary. It validates identity, enforces endpoint roles and tenant
+  predicates, controls ingestion and generation, and emits audit/operational telemetry.
+- **PostgreSQL:** durable documents, chunks, checksums, ACL metadata, and application audit events.
+  SQLite exists only for development and tests and is rejected in production.
+- **Redis:** shared fixed-window rate limits. Production requests fail closed if Redis is unavailable.
+- **LLM provider:** receives the question and authorized retrieved context. This is a deliberate data
+  egress boundary that must be covered by the organization's provider agreement and policy.
+- **ClamAV:** optional upload malware scanning. Set `REQUIRE_MALWARE_SCAN=true` to fail closed.
 
-- `app/api/routes_documents.py`: upload/list/load-sample endpoints.
-- `app/api/routes_chat.py`: main RAG query endpoint.
-- `app/api/routes_evaluation.py`: explicit evaluation endpoint.
-- `app/storage/document_store.py`: JSON-backed local persistence.
+## Request trust boundaries
 
-## Document ingestion pipeline
+1. The browser obtains an access token from the configured OIDC identity provider using
+   Authorization Code with PKCE.
+2. The API independently validates the JWT signature, issuer, audience, expiry, issued-at time, and
+   subject. It maps configured tenant and role claims to a principal.
+3. Endpoint RBAC controls operations. Tenant and allowed-role predicates are applied in database
+   access before any candidate reaches retrieval scoring.
+4. Rate limits use tenant and principal-aware keys. Redis is shared across API workers.
+5. The API supplies only authorized chunks to the retriever and LLM. Client-side state is never used
+   as authorization evidence.
 
-1. Parse upload (`.txt`, `.md`, `.pdf`).
-2. Normalize text and split into overlapping chunks.
-3. Store chunk metadata and text under `backend/.local_store/chunks.json`.
+## Ingestion flow
 
-Each stored chunk includes:
-- `chunk_id`
-- `document_id`
-- `document_name`
-- `text`
-- `chunk_index`
-- `metadata`
-- `created_at`
+1. Require `editor` or `admin`.
+2. Stream the upload with a byte limit; never trust the declared content length.
+3. Sanitize the filename and allow only `.txt`, `.md`, and `.pdf`.
+4. Validate file signatures/content, reject NUL-containing text, parse PDFs strictly, and enforce
+   page and extracted-character limits.
+5. If configured, scan the original bytes with ClamAV.
+6. Compute SHA-256, chunk normalized text, and store document plus chunks atomically.
+7. Enforce checksum deduplication per tenant and write an audit event.
 
-## Vectorless retrieval pipeline
+## Query flow
 
-Retrieval is lexical-only and embedding-free:
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as API
+    participant D as Database
+    participant R as Retriever
+    participant L as LLM
+    U->>A: POST /chat + Bearer token
+    A->>A: Validate JWT, RBAC, rate limit
+    A->>D: Load chunks by tenant and allowed roles
+    D-->>A: Authorized chunks only
+    A->>R: BM25 + character n-gram TF-IDF
+    R-->>A: Confidence-gated top K
+    alt no sufficient evidence
+        A-->>U: Controlled abstention
+    else evidence available
+        A->>L: Evidence-only prompt + untrusted context
+        L-->>A: Answer with [n] citations
+        A->>A: Validate citation indexes
+        A-->>U: Answer, sources, request ID
+    end
+```
 
-1. Tokenize all chunk text.
-2. Build BM25 corpus using `rank-bm25`.
-3. Tokenize user query.
-4. Rank by BM25 score.
-5. Return top-k chunks and scores.
+Raw questions are not stored in application audit rows; a SHA-256 digest supports correlation
+without preserving query content. Operational logging similarly avoids document text and prompts.
 
-This design is intentionally "vectorless" because no embedding model and no vector index are involved.
+## Availability and scaling
 
-## LangGraph workflow
+API workers are stateless apart from cached JWKS metadata. PostgreSQL and Redis are shared state, so
+multiple workers or replicas can be run behind an ingress. Run Alembic as a single deployment job
+before rolling out application replicas. Use managed HA PostgreSQL/Redis, connection limits, pod
+disruption budgets, and autoscaling based on measured latency and saturation.
 
-The query flow is implemented as a directed graph:
+The checked-in Compose file is intentionally single-environment and binds application ports to
+localhost. It is for reproducible evaluation, not high availability.
 
-1. `validate_question`
-2. `retrieve_context`
-3. `generate_answer`
-4. `format_response`
-5. `evaluate_answer` (optional)
+## Design decisions
 
-State keys:
-- `question`
-- `retrieved_chunks`
-- `answer`
-- `sources`
-- `evaluation`
-- `errors`
-
-## RAGAS evaluation
-
-RAGAS evaluates answer quality and retrieval quality (when metrics are available in the installed version):
-
-- `faithfulness`
-- `answer_relevancy`
-- `context_precision`
-- `context_recall`
-- `context_relevancy`
-
-The system dynamically checks metric availability. Missing metrics are skipped and logged.
-
-## Limitations
-
-- BM25 retrieval can miss semantic matches with different vocabulary.
-- JSON local store is suitable for demos but not high-concurrency production use.
-- RAGAS evaluation needs LLM credentials and can increase latency/cost.
-
-## Future improvements
-
-- Add hybrid lexical + lightweight reranking.
-- Introduce document deduplication and upsert strategy.
-- Add usage analytics and retrieval diagnostics dashboards.
-- Add tenant-aware metadata filters.
+- Sparse retrieval avoids embedding storage and an additional embedding-provider egress path. It is
+  inspectable and inexpensive, but less capable on paraphrases and multilingual corpora.
+- Deterministic evaluation avoids sending evaluation material to another model. It is a regression
+  signal, not a substitute for expert review or representative offline benchmarks.
+- The application audit table is useful for product and security investigations, but immutable SIEM
+  export is required to protect records from database administrators.

@@ -1,201 +1,189 @@
-# RAG-Based Internal Knowledge Assistant
+# Enterprise Internal Knowledge Assistant
 
-A production-style portfolio project implementing a **vectorless RAG** system for internal knowledge search and Q&A.
+[![CI](https://github.com/Nishk23/RAG-Based-Internal-Knowledge-Assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/Nishk23/RAG-Based-Internal-Knowledge-Assistant/actions/workflows/ci.yml)
 
-This app demonstrates:
-- Next.js + React + TypeScript frontend
-- FastAPI backend
-- LangChain prompt orchestration
-- LangGraph workflow graph
-- BM25 lexical retrieval (no vector DB, no embeddings)
-- RAGAS-based quality evaluation
-- Dockerized local development
+A security-first, tenant-isolated retrieval-augmented generation reference implementation for internal knowledge. It combines a Next.js 16 OIDC/PKCE client with a FastAPI API, transactional SQL persistence, access-controlled sparse retrieval, citation validation, deterministic evaluation, audit trails, rate limiting, and production observability.
 
-## Why this project stands out
+This repository implements an enterprise **application baseline**. A production approval still requires organization-specific identity configuration, network controls, secrets management, data classification, backup/restore testing, load testing, model-provider review, and a completed threat-model review.
 
-This repository is intentionally built to support resume claims such as:
+## What changed in version 2
 
-> Built a configurable RAG system with LangChain for internal datasets and evaluated answer relevance, faithfulness, hallucination risk, and retrieval quality using RAGAS.
+- OIDC JWT validation with issuer, audience, expiry, signature, tenant, and role checks.
+- Role-based permissions (`reader`, `editor`, `admin`) and tenant filtering before retrieval.
+- SQLAlchemy persistence with PostgreSQL production support, Alembic migrations, atomic ingestion, SHA-256 deduplication, deletion, and tenant-scoped audit events.
+- Bounded file uploads, content/signature checks, strict PDF parsing, filename sanitization, extraction limits, and optional mandatory ClamAV scanning.
+- Confidence-gated BM25 plus character TF-IDF retrieval; irrelevant chunks are dropped.
+- Prompt-injection instructions, strict evidence-only answering, mandatory citations, and citation index validation.
+- Redis-backed fixed-window rate limits that fail closed in production.
+- Structured JSON logs with request correlation, Prometheus metrics, readiness/liveness probes, and optional OpenTelemetry OTLP traces.
+- Deterministic quality indicators and a checked-in golden retrieval gate (Recall@K and MRR).
+- Next.js 16, React 19, OIDC Authorization Code/PKCE, SWR, hardened standalone containers, pinned dependency locks, vulnerability audits, and CI.
 
-## Architecture (text diagram)
+## Architecture
 
-```text
-[Frontend: Next.js Dashboard]
-        |
-        | HTTP (upload, chat, evaluate)
-        v
-[Backend: FastAPI]
-  ├─ /documents/upload, /documents/load-sample
-  ├─ /chat
-  ├─ /evaluate
-  └─ /health
-        |
-        v
-[Ingestion Pipeline]
-  file parser (.txt/.md/.pdf) -> chunker -> JSON local store (.local_store)
-        |
-        v
-[Vectorless Retrieval]
-  BM25 over lexical tokens (rank-bm25)
-        |
-        v
-[LangGraph RAG Workflow]
-  validate_question -> retrieve_context -> generate_answer -> format_response -> evaluate_answer(optional)
-        |
-        v
-[LangChain + ChatOpenAI]
-  prompt templating + LLM generation (with missing-key fallback)
-        |
-        v
-[RAGAS]
-  faithfulness, answer_relevancy, context_precision, context_recall, context_relevancy (if available)
+```mermaid
+flowchart LR
+    User[Enterprise user] --> IdP[OIDC identity provider]
+    User --> UI[Next.js UI]
+    UI -->|Bearer access token| API[FastAPI API]
+    API --> Auth[OIDC signature + claims + RBAC]
+    Auth --> ACL[Tenant and role pre-filter]
+    ACL --> Retrieve[BM25 + character TF-IDF]
+    Retrieve --> Gate[Confidence gate]
+    Gate --> LLM[LLM with untrusted-context prompt]
+    LLM --> Cite[Citation validator]
+    API --> DB[(PostgreSQL)]
+    API --> Redis[(Redis rate limits)]
+    API --> Audit[(Tenant audit events)]
+    API --> Obs[Prometheus + OTLP + JSON logs]
 ```
 
-## Features
+The API is the security boundary. Client-side filtering is never trusted. Documents and chunks are stamped with a tenant and allowed roles; only authorized chunks are loaded before retrieval scores are calculated.
 
-- Upload `.txt`, `.md`, `.pdf` documents
-- Load bundled sample documents in one click
-- Chunking with configurable size/overlap
-- BM25 sparse retrieval with chunk scoring
-- Source-grounded answers with chunk citations
-- Optional RAGAS quality scoring
-- Structured backend logging
-- Pytest coverage for chunking, retrieval, and health endpoint
+See [Architecture](docs/architecture.md), [Security](docs/security.md), and [Threat model](docs/threat-model.md).
 
-## Tech stack
+## Security and governance controls
 
-- Frontend: Next.js 14, React 18, TypeScript, Tailwind CSS
-- Backend: FastAPI, Pydantic
-- RAG orchestration: LangChain, LangGraph
-- Retrieval: rank-bm25 (vectorless lexical retrieval)
-- Evaluation: RAGAS + datasets + pandas
-- Infra: Docker Compose
+| Area | Implemented control |
+|---|---|
+| Identity | OIDC/JWT verification using configured JWKS, issuer, audience, algorithms, and required claims |
+| Authorization | Endpoint RBAC plus tenant- and role-scoped document/chunk access |
+| Data isolation | Tenant predicates at storage access and pre-retrieval ACL filtering |
+| Ingestion | Size/page/text limits, signature/type checks, checksum dedupe, transactional writes, optional ClamAV |
+| RAG safety | Confidence threshold, document-as-untrusted prompt, evidence-only response, mandatory valid citations |
+| Abuse prevention | Redis rate limits for chat, upload, and evaluation; production fails closed when Redis is unavailable |
+| Auditability | Append-only application audit events without raw query text; request IDs on logs and responses |
+| Observability | Health/readiness, Prometheus metrics, structured JSON logs, optional OTLP traces |
+| Supply chain | Exact npm lock, transitive Python lock, npm/pip audits, Dependabot, CI build/test gates |
+| Runtime | Non-root multi-stage containers, read-only Compose filesystems, dropped Linux capabilities |
 
-## Vectorless RAG explanation
+## Local quick start
 
-This system intentionally avoids embeddings and vector databases.
-
-Retrieval uses BM25 (term frequency/inverse document frequency family). Query and chunk text are tokenized and matched lexically. This is a sparse retrieval design that is transparent, lightweight, and easy to audit for internal knowledge workflows.
-
-See [vectorless_rag.md](/Users/nishanthnarayanan/Documents/Codex/2026-05-17/you-are-acting-as-a-senior/rag-internal-knowledge-assistant/docs/vectorless_rag.md).
-
-## LangGraph workflow
-
-The RAG graph has these nodes:
-
-1. `validate_question`
-2. `retrieve_context`
-3. `generate_answer`
-4. `format_response`
-5. `evaluate_answer` (optional)
-
-The graph state tracks question, retrieved chunks, answer, sources, evaluation results, and errors.
-
-## RAGAS evaluation
-
-`/evaluate` and optional `/chat` evaluation compute available RAGAS metrics. The implementation gracefully handles version differences:
-
-- Missing metrics are skipped with warnings.
-- If `OPENAI_API_KEY` is missing, evaluation returns a clear error message.
-
-See [ragas_evaluation.md](/Users/nishanthnarayanan/Documents/Codex/2026-05-17/you-are-acting-as-a-senior/rag-internal-knowledge-assistant/docs/ragas_evaluation.md).
-
-## Repository structure
-
-```text
-rag-internal-knowledge-assistant/
-  backend/
-  frontend/
-  docs/
-  docker-compose.yml
-  .env.example
-  .gitignore
-  README.md
-```
-
-## Setup
-
-1. Clone repository.
-2. Copy env file.
+Requirements: Docker with Compose, or Python 3.12 and Node.js 22.
 
 ```bash
 cp .env.example .env
 ```
 
-3. Add `OPENAI_API_KEY` in `.env` if you want LLM answer generation and RAGAS metrics.
-
-## Local development (without Docker)
-
-### Backend
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-## Docker development
+Change both local database passwords in `.env`, then start the stack:
 
 ```bash
 docker compose up --build
 ```
 
-- Frontend: [http://localhost:3000](http://localhost:3000)
-- Backend: [http://localhost:8000](http://localhost:8000)
+- UI: <http://localhost:3000>
+- API: <http://localhost:8000>
+- API documentation (non-production only): <http://localhost:8000/docs>
+- Liveness: <http://localhost:8000/health/live>
+- Readiness: <http://localhost:8000/health/ready>
 
-## API examples
+Development defaults to `AUTH_MODE=disabled` and a local admin principal. This mode is rejected when `ENVIRONMENT=production`.
 
-### Health
-
-```bash
-curl http://localhost:8000/health
-```
-
-### Upload document
+### Run without Docker
 
 ```bash
-curl -X POST http://localhost:8000/documents/upload \
-  -F "file=@backend/sample_docs/sla_operations.md"
+cd backend
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
 ```
-
-### Load sample docs
 
 ```bash
-curl -X POST http://localhost:8000/documents/load-sample
+cd frontend
+npm ci
+npm run dev
 ```
 
-### Ask question
+SQLite is the backend development default. Production configuration rejects SQLite and requires PostgreSQL.
+
+## Production configuration
+
+Setting `ENVIRONMENT=production` fails startup unless all critical controls are configured:
+
+- `AUTH_MODE=oidc`
+- `OIDC_ISSUER`, `OIDC_AUDIENCE`, and `OIDC_JWKS_URL`
+- PostgreSQL `DATABASE_URL`
+- `REDIS_URL`
+- explicit `CORS_ORIGINS`
+- `METRICS_BEARER_TOKEN`
+- `OPENAI_API_KEY`
+
+For browser SSO, also set the `NEXT_PUBLIC_OIDC_*` build arguments shown in `.env.example`. The identity provider must issue the configured tenant claim and at least one supported role.
+
+Do not put production secrets in `.env` or Docker build arguments. Inject server-side secrets from the platform secret manager. `NEXT_PUBLIC_*` values are intentionally public OIDC client metadata and must not contain secrets.
+
+Follow the [Deployment guide](docs/deployment.md), [Data governance guide](docs/data-governance.md), and [Operations runbook](docs/operations-runbook.md) before approving a production environment.
+
+## API authorization matrix
+
+| Endpoint | Permission |
+|---|---|
+| `GET /health/live`, `GET /health/ready` | Public platform probes |
+| `GET /metrics` | Dedicated metrics bearer token |
+| `GET /me` | Any authenticated role |
+| `GET /documents`, `POST /chat` | Reader, editor, or admin |
+| `POST /documents/upload`, `POST /documents/load-sample` | Editor or admin |
+| `DELETE /documents/{id}`, `GET /audit-events`, `POST /evaluate` | Admin |
+
+See [API authentication and authorization](docs/api-authentication.md) for token claims and examples.
+
+## Retrieval and evaluation
+
+Retrieval remains embedding-free for transparent and low-egress operation:
+
+1. Load only chunks permitted for the authenticated tenant and roles.
+2. Rank using normalized BM25 and character n-gram TF-IDF.
+3. Drop results below absolute and relative confidence thresholds.
+4. Treat retrieved text as untrusted data in the generation prompt.
+5. Require every generated factual answer to contain valid source indexes.
+6. Return a controlled abstention when no authorized evidence is sufficient.
+
+The online `/evaluate` endpoint returns deterministic indicators without sending evaluation data to a second model. CI additionally runs the golden retrieval dataset and rejects regressions below Recall@3 `0.95` or MRR `0.85`. See [Evaluation](docs/evaluation.md).
+
+## Verification
 
 ```bash
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question": "What does the SLA policy say about breach risk?",
-    "top_k": 5,
-    "evaluate": false
-  }'
+cd backend
+ruff check app tests scripts
+ruff format --check app tests scripts
+mypy app
+pytest --cov=app --cov-report=term-missing
+python -m scripts.run_retrieval_eval
+DATABASE_URL=sqlite:////tmp/migration.db ENVIRONMENT=test alembic upgrade head
+pip-audit -r requirements.lock
 ```
-
-### Run evaluation
 
 ```bash
-curl -X POST http://localhost:8000/evaluate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question": "What is the SLA update cadence for Sev-1?",
-    "answer": "Status updates must be posted every 30 minutes.",
-    "contexts": ["Status updates must be posted every 30 minutes during active mitigation."]
-  }'
+cd frontend
+npm ci
+npm run lint
+npm run typecheck
+npm run build
+npm audit --audit-level=high
 ```
+
+The current checked-in baseline passes 38 backend tests, an 80% coverage gate, strict typing/linting, frontend lint/type/build, migration validation, dependency audits, and the golden retrieval gate.
+
+## Documentation
+
+- [Architecture and data flow](docs/architecture.md)
+- [Security controls](docs/security.md)
+- [Threat model](docs/threat-model.md)
+- [API authentication and authorization](docs/api-authentication.md)
+- [Production deployment](docs/deployment.md)
+- [Operations runbook](docs/operations-runbook.md)
+- [Data governance](docs/data-governance.md)
+- [Evaluation and quality gates](docs/evaluation.md)
+- [Vectorless retrieval design](docs/vectorless_rag.md)
+- [Security vulnerability reporting](SECURITY.md)
+
+## Known boundaries
+
+- Sparse retrieval is intentionally transparent but does not provide full semantic matching. Evaluate a dense or hybrid embedding index for high-recall multilingual or paraphrase-heavy corpora.
+- The included Compose stack is a reproducible single-environment reference, not a substitute for a managed HA database, managed Redis, ingress/WAF, secret manager, or orchestrator.
+- ClamAV is supported but not bundled into the default Compose stack; regulated deployments should set `REQUIRE_MALWARE_SCAN=true` and provide a monitored scanner.
+- OIDC claim names and role mapping must be reviewed against the organization’s identity governance process.
+- Application audit rows should be exported to immutable centralized retention storage; database administrator access is outside the application threat boundary.
+- Legal, privacy, records-retention, and model-provider approvals are organization-specific and cannot be solved by repository code alone.

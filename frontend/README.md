@@ -1,13 +1,28 @@
 # Frontend
 
-Next.js + TypeScript + Tailwind dashboard for the Internal Knowledge Assistant.
+Next.js 16 and React 19 browser client using OIDC Authorization Code with PKCE. It sends access
+tokens to the FastAPI security boundary and uses SWR for authenticated document state.
 
-## Run locally
+## Development
 
 ```bash
-cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Set `NEXT_PUBLIC_BACKEND_URL` in `.env` at repository root (or your shell) to point to FastAPI.
+Configure `NEXT_PUBLIC_BACKEND_URL` and the public `NEXT_PUBLIC_OIDC_*` settings from
+`.env.example`. These values are embedded into browser JavaScript and must never contain a client
+secret. The backend's disabled-auth mode can be used only in a non-production local environment.
+
+## Quality gates
+
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run build
+npm audit --audit-level=high
+```
+
+The production image uses Next.js standalone output and runs as a non-root user. See the repository
+[README](../README.md) and [Deployment guide](../docs/deployment.md).

@@ -1,29 +1,33 @@
 # Backend
 
-FastAPI backend for the RAG-Based Internal Knowledge Assistant.
+FastAPI service for tenant-isolated ingestion, sparse retrieval, cited generation, deterministic
+evaluation, audit events, and operational telemetry. PostgreSQL is required in production; SQLite
+is available only for development and tests.
 
-## Features
-
-- Document ingestion for `.txt`, `.md`, `.pdf`
-- Configurable chunking with overlap
-- **Vectorless retrieval** using BM25 (no embeddings, no vector DB)
-- LangGraph workflow orchestration
-- LangChain LLM answer generation with OpenAI fallback messaging
-- Optional RAGAS evaluation endpoint
-
-## Run locally
+## Development
 
 ```bash
-cd backend
-python -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
+alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
-## Run tests
+Development uses the local principal configured in `.env.example`. Production rejects disabled
+authentication and unsafe data-service configuration.
+
+## Quality gates
 
 ```bash
-cd backend
-pytest -q
+ruff check app tests scripts
+ruff format --check app tests scripts
+mypy app
+pytest --cov=app --cov-report=term-missing
+python -m scripts.run_retrieval_eval
+DATABASE_URL=sqlite:////tmp/migration.db ENVIRONMENT=test alembic upgrade head
+pip-audit -r requirements.lock
 ```
+
+See the repository [README](../README.md), [API authentication](../docs/api-authentication.md), and
+[Deployment guide](../docs/deployment.md).

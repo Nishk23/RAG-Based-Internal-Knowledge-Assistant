@@ -9,6 +9,7 @@ export interface DocumentSummary {
   document_name: string;
   chunk_count: number;
   created_at: string;
+  allowed_roles: string[];
   metadata: Record<string, unknown>;
 }
 
@@ -16,6 +17,7 @@ export interface UploadResponse {
   document_id: string;
   document_name: string;
   chunk_count: number;
+  checksum: string;
   message: string;
 }
 
@@ -26,6 +28,7 @@ export interface SampleLoadResponse {
 }
 
 export interface SourceChunk {
+  citation_index: number;
   document_name: string;
   chunk_id: string;
   text: string;
@@ -50,6 +53,7 @@ export interface ChatResponse {
   sources: SourceChunk[];
   retrieval_method: string;
   evaluation: EvaluationResult | null;
+  request_id: string;
 }
 
 export interface EvaluationRequest {

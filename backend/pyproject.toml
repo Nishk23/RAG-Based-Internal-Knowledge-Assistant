@@ -1,32 +1,46 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools==84.0.0", "wheel==0.48.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rag-internal-knowledge-assistant-backend"
-version = "1.0.0"
-description = "FastAPI backend for vectorless RAG internal knowledge assistant"
-requires-python = ">=3.11"
-dependencies = [
-  "fastapi",
-  "uvicorn",
-  "pydantic",
-  "python-dotenv",
-  "langchain",
-  "langchain-openai",
-  "langgraph",
-  "ragas",
-  "datasets",
-  "pandas",
-  "numpy",
-  "scikit-learn",
-  "rank-bm25",
-  "pypdf",
-  "python-multipart",
-  "pytest",
-  "httpx",
-]
+name = "enterprise-internal-knowledge-assistant-backend"
+version = "2.0.0"
+description = "Tenant-isolated, access-controlled internal knowledge assistant"
+requires-python = ">=3.12,<3.14"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.in"] }
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+addopts = "--strict-markers --strict-config"
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+"migrations/**" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["migrations"]
+disable_error_code = ["import-untyped"]

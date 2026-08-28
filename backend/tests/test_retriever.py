@@ -28,4 +28,4 @@ def test_retriever_returns_relevant_chunk_first() -> None:
 
     assert results
     assert results[0].chunk_id == "c1"
-    assert results[0].score >= results[1].score
+    assert all(result.chunk_id != "c2" for result in results)

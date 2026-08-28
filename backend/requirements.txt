@@ -1,17 +1,2 @@
-fastapi
-uvicorn
-pydantic
-python-dotenv
-langchain
-langchain-openai
-langgraph
-ragas
-datasets
-pandas
-numpy
-scikit-learn
-rank-bm25
-pypdf
-python-multipart
-pytest
-httpx
+# Production dependencies are transitively pinned for reproducible image builds.
+-r requirements.lock

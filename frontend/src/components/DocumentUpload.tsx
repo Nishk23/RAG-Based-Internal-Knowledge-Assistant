@@ -1,32 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 
 import { listDocuments, loadSampleDocuments, uploadDocument } from "@/lib/api";
 import { DocumentSummary } from "@/lib/types";
+import { useEnterpriseAuth } from "@/components/Providers";
 
 interface DocumentUploadProps {
   onUploaded?: () => void;
 }
 
 export function DocumentUpload({ onUploaded }: DocumentUploadProps) {
-  const [documents, setDocuments] = useState<DocumentSummary[]>([]);
+  const auth = useEnterpriseAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string>("Ready to upload documents.");
   const [loading, setLoading] = useState(false);
-
-  const refreshDocuments = async () => {
-    try {
-      const docs = await listDocuments();
-      setDocuments(docs);
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to load document list.");
-    }
-  };
-
-  useEffect(() => {
-    void refreshDocuments();
-  }, []);
+  const {
+    data: documents = [],
+    error: documentError,
+    mutate: refreshDocuments
+  } = useSWR<DocumentSummary[]>(
+    ["documents", auth.accessToken ?? "development"],
+    () => listDocuments(auth.accessToken),
+    { shouldRetryOnError: true, errorRetryCount: 3 }
+  );
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -38,7 +36,7 @@ export function DocumentUpload({ onUploaded }: DocumentUploadProps) {
     setStatus("Uploading and indexing document...");
 
     try {
-      const result = await uploadDocument(selectedFile);
+      const result = await uploadDocument(selectedFile, auth.accessToken);
       setStatus(`${result.document_name} uploaded with ${result.chunk_count} chunks.`);
       setSelectedFile(null);
       await refreshDocuments();
@@ -54,7 +52,7 @@ export function DocumentUpload({ onUploaded }: DocumentUploadProps) {
     setLoading(true);
     setStatus("Loading bundled sample documents...");
     try {
-      const result = await loadSampleDocuments();
+      const result = await loadSampleDocuments(auth.accessToken);
       setStatus(
         `Loaded ${result.documents_loaded} sample docs with ${result.chunks_indexed} total chunks.`
       );
@@ -96,7 +94,9 @@ export function DocumentUpload({ onUploaded }: DocumentUploadProps) {
             Load Sample Docs
           </button>
         </div>
-        <p className="text-xs text-slate-600">{status}</p>
+        <p className="text-xs text-slate-600">
+          {documentError instanceof Error ? documentError.message : status}
+        </p>
       </div>
 
       <div className="mt-5">
