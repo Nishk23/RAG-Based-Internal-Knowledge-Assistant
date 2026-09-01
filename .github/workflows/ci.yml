@@ -20,7 +20,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: backend/requirements*.txt
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
       - run: pip install --requirement requirements-dev.txt
       - run: ruff check app tests scripts
       - run: ruff format --check app tests scripts
@@ -28,7 +30,7 @@ jobs:
       - run: pytest --cov=app --cov-report=term-missing
       - run: python -m scripts.run_retrieval_eval
       - run: DATABASE_URL=sqlite:////tmp/migration.db ENVIRONMENT=test alembic upgrade head
-      - run: pip-audit --requirement requirements.lock
+      - run: pip-audit --requirement requirements-dev.txt
 
   frontend:
     runs-on: ubuntu-latest

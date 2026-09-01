@@ -8,7 +8,7 @@ RUN python -m venv "$VIRTUAL_ENV"
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 WORKDIR /build
-COPY requirements.in requirements.lock requirements.txt ./
+COPY requirements.txt ./
 RUN pip install --requirement requirements.txt
 
 FROM python:3.12-slim AS runtime
