@@ -57,6 +57,8 @@ filelock==3.32.5
     # via cachecontrol
 googleapis-common-protos==1.75.2
     # via opentelemetry-exporter-otlp-proto-http
+greenlet==3.5.5
+    # via sqlalchemy
 h11==0.16.0
     # via
     #   httpcore
@@ -226,7 +228,7 @@ py-serializable==2.1.0
     # via cyclonedx-python-lib
 pycparser==3.0
     # via cffi
-pydantic==2.13.4
+pydantic==2.13.5
     # via
     #   -r requirements.in
     #   fastapi
@@ -235,7 +237,7 @@ pydantic==2.13.4
     #   langsmith
     #   openai
     #   pydantic-settings
-pydantic-core==2.46.4
+pydantic-core==2.46.5
     # via pydantic
 pydantic-settings==2.15.0
     # via -r requirements.in
