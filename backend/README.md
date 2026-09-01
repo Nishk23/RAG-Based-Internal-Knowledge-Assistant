@@ -26,7 +26,7 @@ mypy app
 pytest --cov=app --cov-report=term-missing
 python -m scripts.run_retrieval_eval
 DATABASE_URL=sqlite:////tmp/migration.db ENVIRONMENT=test alembic upgrade head
-pip-audit -r requirements.lock
+pip-audit -r requirements-dev.txt
 ```
 
 See the repository [README](../README.md), [API authentication](../docs/api-authentication.md), and
