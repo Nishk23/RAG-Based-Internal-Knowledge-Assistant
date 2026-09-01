@@ -100,10 +100,23 @@ export function demoSampleLoad(): SampleLoadResponse {
   };
 }
 
+function normalizeDemoToken(token: string): string {
+  if (token.length > 4 && token.endsWith("ies")) {
+    return `${token.slice(0, -3)}y`;
+  }
+  if (token.length > 3 && token.endsWith("s") && !token.endsWith("ss")) {
+    return token.slice(0, -1);
+  }
+  return token;
+}
+
 export function demoChat(payload: ChatRequest): ChatResponse {
   const normalizedQuestion = payload.question.toLowerCase();
+  const questionTerms = new Set(
+    normalizedQuestion.split(/[^a-z0-9]+/).filter(Boolean).map(normalizeDemoToken)
+  );
   const match = sampleAnswers.find((sample) =>
-    sample.terms.some((term) => normalizedQuestion.includes(term))
+    sample.terms.some((term) => questionTerms.has(normalizeDemoToken(term)))
   );
 
   if (!match) {
