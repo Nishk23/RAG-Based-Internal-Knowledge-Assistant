@@ -117,7 +117,7 @@ export async function runEvaluation(
 
 export async function healthCheck(): Promise<HealthResponse> {
   if (DEMO_MODE) {
-    return { status: "ok", service: "sample-demo", version: "1.0.0" };
+    return { status: "ok", service: "sample-demo", version: "1.0.1" };
   }
 
   const response = await fetch(`${BACKEND_URL}/health`);

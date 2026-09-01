@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "enterprise-internal-knowledge-assistant-backend"
-version = "1.0.0"
+version = "1.0.1"
 description = "Tenant-isolated, access-controlled internal knowledge assistant"
 requires-python = ">=3.12,<3.14"
 dynamic = ["dependencies"]
