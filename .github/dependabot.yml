@@ -4,6 +4,10 @@ updates:
     directory: /backend
     schedule: { interval: weekly }
     open-pull-requests-limit: 5
+    # The production lock is scanned directly; this wrapper references it and
+    # cannot be evaluated in Dependabot's isolated dependency-graph directory.
+    exclude-paths:
+      - requirements-dev.txt
   - package-ecosystem: npm
     directory: /frontend
     schedule: { interval: weekly }
