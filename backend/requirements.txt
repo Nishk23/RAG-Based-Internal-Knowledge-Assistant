@@ -169,9 +169,9 @@ protobuf==7.36.1
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
-psycopg[binary]==3.3.4
+psycopg[binary]==3.3.5
     # via -r requirements.in
-psycopg-binary==3.3.4
+psycopg-binary==3.3.5
     # via psycopg
 pycparser==3.0
     # via cffi
