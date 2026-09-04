@@ -13,7 +13,7 @@
     "node": ">=20.9.0"
   },
   "dependencies": {
-    "next": "16.3.3",
+    "next": "16.3.4",
     "oidc-client-ts": "3.5.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
