@@ -105,7 +105,7 @@ markupsafe==3.0.3
     # via mako
 narwhals==2.25.0
     # via scikit-learn
-numpy==2.5.2
+numpy==2.5.3
     # via
     #   -r requirements.in
     #   rank-bm25
