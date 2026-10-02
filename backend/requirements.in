@@ -8,7 +8,7 @@ langgraph==1.2.11
 rank-bm25==0.2.2
 scikit-learn==1.9.0
 numpy==2.5.2
-pypdf==6.16.2
+pypdf==6.19.0
 python-multipart==0.0.32
 SQLAlchemy==2.0.52
 psycopg[binary]==3.3.4
