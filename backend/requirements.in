@@ -7,11 +7,11 @@ langchain-openai==1.6.0
 langgraph==1.2.11
 rank-bm25==0.2.2
 scikit-learn==1.9.0
-numpy==2.5.2
+numpy==2.5.3
 pypdf==6.19.0
 python-multipart==0.0.32
 SQLAlchemy==2.0.52
-psycopg[binary]==3.3.4
+psycopg[binary]==3.3.5
 PyJWT[crypto]==2.15.0
 redis==8.1.0
 prometheus-client==0.26.0
