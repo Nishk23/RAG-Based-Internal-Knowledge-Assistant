@@ -19,6 +19,6 @@ opentelemetry-api==1.44.0
 opentelemetry-sdk==1.44.0
 opentelemetry-exporter-otlp-proto-http==1.44.0
 opentelemetry-instrumentation-fastapi==0.65b0
-alembic==1.19.1
+alembic==1.19.2
 httpx==0.28.1
 urllib3==2.8.0
