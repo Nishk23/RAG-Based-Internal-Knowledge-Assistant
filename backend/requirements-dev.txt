@@ -285,7 +285,7 @@ requests-toolbelt==1.0.0
     # via langsmith
 rich==15.0.0
     # via pip-audit
-ruff==0.16.5
+ruff==0.16.6
     # via -r requirements-dev.in
 scikit-learn==1.9.0
     # via -r requirements.in
