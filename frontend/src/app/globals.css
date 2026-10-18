@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 :root {
   --font-ui: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
