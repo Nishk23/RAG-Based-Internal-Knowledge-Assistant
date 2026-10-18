@@ -99,7 +99,7 @@ langgraph-sdk==0.4.4
     # via langgraph
 langsmith==0.11.2
     # via langchain-core
-mako==1.4.1
+mako==1.4.2
     # via alembic
 markupsafe==3.0.3
     # via mako
@@ -266,7 +266,9 @@ typing-inspection==0.4.4
     #   pydantic
     #   pydantic-settings
 urllib3==2.8.0
-    # via requests
+    # via
+    #   -r requirements.in
+    #   requests
 uuid-utils==0.17.0
     # via
     #   langchain-core
