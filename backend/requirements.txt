@@ -188,11 +188,11 @@ pydantic-core==2.46.5
     # via pydantic
 pydantic-settings==2.15.0
     # via -r requirements.in
-pyjwt[crypto]==2.13.0
+pyjwt[crypto]==2.15.0
     # via
     #   -r requirements.in
     #   pyjwt
-pypdf==6.16.2
+pypdf==6.19.0
     # via -r requirements.in
 python-dotenv==1.2.3
     # via
@@ -265,7 +265,7 @@ typing-inspection==0.4.4
     #   fastapi
     #   pydantic
     #   pydantic-settings
-urllib3==2.7.0
+urllib3==2.8.0
     # via requests
 uuid-utils==0.17.0
     # via
