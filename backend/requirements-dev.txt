@@ -137,7 +137,7 @@ mypy-extensions==1.1.0
     # via mypy
 narwhals==2.25.0
     # via scikit-learn
-numpy==2.5.3
+numpy==2.5.4
     # via
     #   -r requirements.in
     #   rank-bm25
