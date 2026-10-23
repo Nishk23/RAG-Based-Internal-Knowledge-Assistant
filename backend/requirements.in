@@ -10,7 +10,7 @@ scikit-learn==1.9.0
 numpy==2.5.3
 pypdf==6.19.0
 python-multipart==0.0.32
-SQLAlchemy==2.0.52
+SQLAlchemy==2.1.5
 psycopg[binary]==3.3.5
 PyJWT[crypto]==2.15.0
 redis==8.1.0
