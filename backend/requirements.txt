@@ -192,7 +192,7 @@ pyjwt[crypto]==2.15.0
     # via
     #   -r requirements.in
     #   pyjwt
-pypdf==6.19.0
+pypdf==6.21.2
     # via -r requirements.in
 python-dotenv==1.2.3
     # via
