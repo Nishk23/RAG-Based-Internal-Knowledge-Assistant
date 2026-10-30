@@ -53,7 +53,7 @@ distro==1.9.0
     # via langsmith
 fastapi==0.141.1
     # via -r requirements.in
-filelock==3.32.5
+filelock==4.2.1
     # via cachecontrol
 googleapis-common-protos==1.75.2
     # via opentelemetry-exporter-otlp-proto-http
